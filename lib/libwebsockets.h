@@ -1735,6 +1735,70 @@ LWS_VISIBLE LWS_EXTERN void
 lws_genrsa_destroy(struct lws_genrsa_ctx *ctx);
 ///@}
 
+/*! \defgroup jwk JSON Web Keys
+ * ## JSON Web Keys API
+ *
+ * Lws provides an API to parse JSON Web Keys into a struct lws_genrsa_elements.
+ *
+ * "oct" and "RSA" type keys are supported.  For "oct" keys, they are held in
+ * the "e" member of the struct lws_genrsa_elements.
+ *
+ * Keys elements are allocated on the heap.  You must destroy the allocations
+ * in the struct lws_genrsa_elements by calling
+ * lws_jwk_destroy_genrsa_elements() when you are finished with it.
+ */
+///@{
+
+struct lws_jwk {
+	char keytype[5];		/**< "OCT" or "RSA" */
+	struct lws_genrsa_elements el;	/**< OCTet key is in el.e */
+};
+
+/** lws_jwk_create() - Create a JSON Web key from the textual representation
+ *
+ * \param s: the JWK object to create
+ * \param in: a single JWK JSON stanza in utf-8
+ * \param len: the length of the JWK JSON stanza in bytes
+ *
+ * Creates an lws_jwk struct filled with data from the JSON representation.
+ * "oct" and "rsa" key types are supported.
+ *
+ * For "oct" type keys, it is loaded into el.e.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_jwk_create(struct lws_jwk *s, const char *in, size_t len);
+
+/** lws_jwk_destroy() - Destroy a JSON Web key
+ *
+ * \param s: the JWK object to destroy
+ *
+ * All allocations in the lws_jwk are destroyed
+ */
+LWS_VISIBLE LWS_EXTERN void
+lws_jwk_destroy(struct lws_jwk *s);
+///@}
+
+
+/*! \defgroup jws JSON Web Signature
+ * ## JSON Web Signature API
+ *
+ * Lws provides an API to check and create RFC7515 JSON Web Signatures
+ *
+ * SHA256/384/512 HMAC, and RSA 256/384/512 are supported.
+ *
+ * The API uses your TLS library crypto, but works exactly the same no matter
+ * what you TLS backend is.
+ */
+///@{
+LWS_VISIBLE LWS_EXTERN  int
+lws_jws_encode_section(const char *in, size_t in_len, int first, char **p,
+		       char *end);
+
+LWS_VISIBLE LWS_EXTERN int
+lws_jws_confirm_sig(const char *in, size_t len, struct lws_jwk *jwk);
+
+///@}
+#endif
 
 /*! \defgroup extensions Extension related functions
  * ##Extension releated functions

@@ -2490,6 +2490,8 @@ lws_ssl_capable_write_no_ssl(struct lws *wsi, unsigned char *buf, int len);
 LWS_EXTERN int LWS_WARN_UNUSED_RESULT
 lws_ssl_pending_no_ssl(struct lws *wsi);
 
+int lws_jws_selftest(void);
+
 #ifdef LWS_WITH_HTTP_PROXY
 struct lws_rewrite {
 	hubbub_parser *parser;
