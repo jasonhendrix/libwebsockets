@@ -1604,10 +1604,137 @@ lws_genhmac_update(struct lws_genhmac_ctx *ctx, const void *in, size_t len);
  */
 int
 lws_genhmac_destroy(struct lws_genhmac_ctx *ctx, void *result);
-
-#endif
-
 ///@}
+
+/*! \defgroup generic RSA
+ * ## Generic RSA related functions
+ *
+ * Lws provides generic RSA functions that abstract the ones
+ * provided by whatever OpenSSL library you are linking against.
+ *
+ * It lets you use the same code if you build against mbedtls or OpenSSL
+ * for example.
+ */
+///@{
+
+struct lws_genrsa_ctx {
+#if defined(LWS_WITH_MBEDTLS)
+	mbedtls_rsa_context *ctx;
+#else
+	BIGNUM *bn_e, *bn_n, *bn_d, *bn_p, *bn_q, *bn_dp, *bn_dq, *bn_qi;
+	RSA *rsa;
+#endif
+};
+
+struct lws_genrsa_element {
+	uint8_t *buf;
+	uint16_t len;
+};
+
+struct lws_genrsa_elements {
+	struct lws_genrsa_element n;
+	struct lws_genrsa_element e;
+	struct lws_genrsa_element d;
+	struct lws_genrsa_element p;
+	struct lws_genrsa_element q;
+	struct lws_genrsa_element dp;
+	struct lws_genrsa_element dq;
+	struct lws_genrsa_element qi;
+};
+
+/** lws_jwk_destroy_genrsa_elements() - Free allocations in genrsa_elements
+ *
+ * \param el: your struct lws_genrsa_elements
+ *
+ * This is a helper for user code making use of struct lws_genrsa_elements
+ * where the elements are allocated on the heap, it frees any non-NULL
+ * buf element and sets the buf to NULL.
+ *
+ * NB: lws_genrsa_public_... apis do not need this as they take care of the key
+ * creation and destruction themselves.
+ */
+LWS_VISIBLE LWS_EXTERN void
+lws_jwk_destroy_genrsa_elements(struct lws_genrsa_elements *el);
+
+/** lws_genrsa_public_decrypt_create() - Create RSA public decrypt context
+ *
+ * \param ctx: your struct lws_genrsa_ctx
+ * \param el: struct prepared with key element data
+ *
+ * Creates an RSA context with a public key associated with it, formed from
+ * the key elements in \p el.
+ *
+ * Returns 0 for OK or nonzero for error.
+ *
+ * This and related APIs operate identically with OpenSSL or mbedTLS backends.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_genrsa_create(struct lws_genrsa_ctx *ctx, struct lws_genrsa_elements *el);
+
+/** lws_genrsa_public_decrypt() - Perform RSA public decryption
+ *
+ * \param ctx: your struct lws_genrsa_ctx
+ * \param in: encrypted input
+ * \param in_len: length of encrypted input
+ * \param out: decrypted output
+ * \param out_max: size of output buffer
+ *
+ * Performs the decryption.
+ *
+ * Returns <0 for error, or length of decrypted data.
+ *
+ * This and related APIs operate identically with OpenSSL or mbedTLS backends.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_genrsa_public_decrypt(struct lws_genrsa_ctx *ctx, const uint8_t *in,
+			  size_t in_len, uint8_t *out, size_t out_max);
+
+/** lws_genrsa_public_verify() - Perform RSA public verification
+ *
+ * \param ctx: your struct lws_genrsa_ctx
+ * \param in: unencrypted payload (usually a recomputed hash)
+ * \param hash_type: one of LWS_GENHASH_TYPE_
+ * \param sig: pointer to the signature we received with the payload
+ * \param sig_len: length of the signature we are checking in bytes
+ *
+ * Returns <0 for error, or 0 if signature matches the payload + key.
+ *
+ * This and related APIs operate identically with OpenSSL or mbedTLS backends.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_genrsa_public_verify(struct lws_genrsa_ctx *ctx, const uint8_t *in,
+			 enum lws_genhash_types hash_type,
+			 const uint8_t *sig, size_t sig_len);
+
+/** lws_genrsa_public_sign() - Create RSA signature
+ *
+ * \param ctx: your struct lws_genrsa_ctx
+ * \param in: precomputed hash
+ * \param hash_type: one of LWS_GENHASH_TYPE_
+ * \param sig: pointer to buffer to take signature
+ * \param sig_len: length of the buffer (must be >= length of key N)
+ *
+ * Returns <0 for error, or 0 for success.
+ *
+ * This and related APIs operate identically with OpenSSL or mbedTLS backends.
+ */
+LWS_VISIBLE LWS_EXTERN int
+lws_genrsa_public_sign(struct lws_genrsa_ctx *ctx, const uint8_t *in,
+			 enum lws_genhash_types hash_type, uint8_t *sig,
+			 size_t sig_len);
+
+/** lws_genrsa_public_decrypt_destroy() - Destroy RSA public decrypt context
+ *
+ * \param ctx: your struct lws_genrsa_ctx
+ *
+ * Destroys any allocations related to \p ctx.
+ *
+ * This and related APIs operate identically with OpenSSL or mbedTLS backends.
+ */
+LWS_VISIBLE LWS_EXTERN void
+lws_genrsa_destroy(struct lws_genrsa_ctx *ctx);
+///@}
+
 
 /*! \defgroup extensions Extension related functions
  * ##Extension releated functions
