@@ -1256,7 +1256,7 @@ again:
 			if (n > 0) {
 				/* the decrypted sig is in ASN1 format */
 				m = 0;
-				while (m < n) {
+				while ((int)m < n) {
 					/* sig payload */
 					if (otmp[m] == 0x04 &&
 					    otmp[m + 1] == lws_genhash_size(
@@ -2187,7 +2187,7 @@ lws_callback_raw_sshd(struct lws *wsi, enum lws_callback_reasons reason,
 			 *    string    public key blob from the request
       			 */
 			n = 74 + pss->ua->pubkey_len;
-			if (n > sizeof(buf) - LWS_PRE) {
+			if (n > (int)sizeof(buf) - LWS_PRE) {
 				lwsl_notice("pubkey too large\n");
 				goto bail;
 			}

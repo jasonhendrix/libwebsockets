@@ -256,9 +256,9 @@ lws_jws_confirm_sig(const char *in, size_t len, struct lws_jwk *jwk)
 
 	/* 2) find length of first, hdr, block */
 
-	while (in[pos] != '.' && pos < len)
+	while (in[pos] != '.' && pos < (int)len)
 		pos++;
-	if (pos == len)
+	if (pos == (int)len)
 		return -1;
 
 	/* 3) Decode the header block */

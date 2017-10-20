@@ -141,7 +141,7 @@ LWS_VISIBLE int
 lws_genrsa_public_decrypt(struct lws_genrsa_ctx *ctx, const uint8_t *in,
 			   size_t in_len, uint8_t *out, size_t out_max)
 {
-	int m;
+	uint32_t m;
 
 	m = RSA_public_decrypt(in_len, in, out, ctx->rsa, RSA_PKCS1_PADDING);
 
@@ -150,7 +150,7 @@ lws_genrsa_public_decrypt(struct lws_genrsa_ctx *ctx, const uint8_t *in,
 	ctx->rsa = NULL;
 
 	if (m != (uint32_t)-1)
-		return m;
+		return (int)m;
 
 	return -1;
 }
@@ -228,11 +228,10 @@ lws_genrsa_destroy(struct lws_genrsa_ctx *ctx)
 		return;
 
 #if defined(LWS_HAVE_RSA_SET0_KEY)
-	if (RSA_set0_key(ctx->rsa, NULL, NULL, NULL) != 1) {
+	if (RSA_set0_key(ctx->rsa, NULL, NULL, NULL) != 1)
 		lwsl_notice("RSA_set0_key failed\n");
-		goto bail;
-	}
 	RSA_set0_factors(ctx->rsa, NULL, NULL);
+
 #else
 	ctx->rsa->e = NULL;
 	ctx->rsa->n = NULL;
